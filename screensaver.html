@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Night-Vision Safe Multi-Zone Clock Screensaver</title>
+    <style>
+        /* Force full screen and hide scrollbars */
+        * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; }
+        body, html { width: 100%; height: 100%; background: #000; font-family: monospace; }
+        
+        /* Video Container to handle absolute centering and dynamic scaling */
+        .video-wrapper {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            /* Heavy red tint filter ensures bright background video elements won't flash you */
+            filter: grayscale(1) brightness(0.15) sepia(1) hue-rotate(-50deg) saturate(10);
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Anchor container perfectly to the bottom-right corner */
+        .overlay-container {
+            position: absolute; 
+            z-index: 2;
+            bottom: 40px; 
+            right: 50px;
+            text-align: right;
+            pointer-events: none;
+        }
+
+        /* 24-Hour Main Clock (Pure Night-Vision Deep Red) */
+        #clock {
+            font-size: 7.5rem; 
+            font-weight: 900;  
+            letter-spacing: -1px;
+            color: #FF0000; /* Strict pure red */
+            text-shadow: 0px 0px 15px rgba(255, 0, 0, 0.6); 
+            line-height: 1;
+        }
+
+        /* World Time / Epoch Metrics Sub-Panel */
+        .world-zones {
+            font-size: 1.8rem;
+            color: #B30000; /* Muted secondary red */
+            margin-top: 15px;
+            font-weight: bold;
+            text-shadow: 0px 0px 8px rgba(179, 0, 0, 0.4);
+            line-height: 1.4;
+        }
+
+        /* Dimmed Calibration Zoom Slider (Bottom-Left Corner) */
+        .control-panel {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-panel label {
+            color: #800000;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .control-panel input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #330000;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            width: 150px;
+        }
+
+        /* Pure Red Thumb Customization */
+        .control-panel input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #FF0000;
+            cursor: pointer;
+            box-shadow: 0 0 5px #FF0000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Video Element Wrap -->
+    <div class="video-wrapper" id="v-wrap">
+        <video autoplay muted loop playsinline id="bg-video">
+            <source src"C:\Users\J\Documents\succ_screensaver\my-video.mp4"= type="video/mp4">
+        </video>
+    </div>
+
+    <!-- Interactive Bottom-Left Zoom Slider -->
+    <div class="control-panel">
+        <label for="zoomSlider">VIDEO ZOOM</label>
+        <input type="range" id="zoomSlider" min="10" max="150" value="50">
+    </div>
+
+    <!-- Visual Overlays anchored Right -->
+    <div class="overlay-container">
+        <div id="clock">00:00:00</div>
+        <div class="world-zones">
+            <div id="zone-london">UTC/LON: 00:00:00</div>
+            <div id="zone-nyc">NYC/EST: 00:00:00</div>
+            <div id="epoch-time">EP: 0000000000</div>
+        </div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('bg-video');
+        const zoomSlider = document.getElementById('zoomSlider');
+
+        // 1. Zoom Logic (Defaulting to 50% scale multiplier)
+        function applyZoom(value) {
+            const scaleFactor = value / 100;
+            videoElement.style.transform = `scale(${scaleFactor})`;
+        }
+        
+        zoomSlider.addEventListener('input', (e) => {
+            applyZoom(e.target.value);
+        });
+        applyZoom(50); // Hard initial lock to 50%
+
+        // 2. Strict Keystroke Wake-Lock Engine
+        // Intentionally ignores window.onmousemove to prevent vibration wakes
+        window.addEventListener('keydown', () => {
+            // Closes browser engine instance cleanly when loaded via wrapper shell
+            window.close();
+        });
+
+        // 3. Real-Time Temporal Matrix Updates
+        function updateTime() {
+            const now = new Date();
+            
+            let hours = String(now.getHours()).padStart(2, '0');
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            let seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+            const londonTime = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Europe/London',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).format(now);
+            document.getElementById('zone-london').textContent = `UTC/LON: ${londonTime}`;
+
+            const nycTime = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'America/New_York',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).format(now);
+            document.getElementById('zone-nyc').textContent = `NYC/EST: ${nycTime}`;
+
+            const epochTimestamp = Math.floor(now.getTime() / 1000);
+            document.getElementById('epoch-time').textContent = `EP: ${epochTimestamp}`;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>
